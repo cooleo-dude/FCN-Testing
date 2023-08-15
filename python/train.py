@@ -20,7 +20,7 @@ import sys
 import os
 
 
-n_class    = 20
+n_class    = 32
 
 batch_size = 6
 epochs     = 500
@@ -102,8 +102,10 @@ def train():
             optimizer.step()
 
             if iter % 10 == 0:
-                print("epoch{}, iter{}, loss: {}".format(epoch, iter, loss.data[0]))
-        
+                print("Epoch: %s" %epoch)
+                print("Loss: %s" %loss)
+                #print("epoch{}, iter{}, loss: {}".format(epoch, iter, loss.data[0]))
+
         print("Finish epoch {}, time elapsed {}".format(epoch, time.time() - ts))
         torch.save(fcn_model, model_path)
 
