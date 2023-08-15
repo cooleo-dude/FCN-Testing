@@ -10,7 +10,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from fcn import VGGNet, FCN32s, FCN16s, FCN8s, FCNs
-from Cityscapes_loader import CityscapesDataset
+#from Cityscapes_loader import CityscapesDataset
 from CamVid_loader import CamVidDataset
 
 from matplotlib import pyplot as plt
@@ -120,6 +120,7 @@ def val(epoch):
         else:
             inputs = Variable(batch['X'])
 
+        print(inputs.size())
         output = fcn_model(inputs)
         output = output.data.cpu().numpy()
 
