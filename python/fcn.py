@@ -140,7 +140,8 @@ class FCNs(nn.Module):
         x3 = output['x3']  # size=(N, 256, x.H/8,  x.W/8)
         x2 = output['x2']  # size=(N, 128, x.H/4,  x.W/4)
         x1 = output['x1']  # size=(N, 64, x.H/2,  x.W/2)
-
+        print(x5.size())
+        print(self.deconv1(x5).size())
         score = self.bn1(self.relu(self.deconv1(x5)))     # size=(N, 512, x.H/16, x.W/16)
         print(score.size())
         print(x4.size())

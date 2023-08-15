@@ -41,8 +41,8 @@ class CamVidDataset(Dataset):
             self.new_h = train_h
             self.new_w = train_w
         elif phase == 'val':
-            self.flip_rate = 0.
-            self.crop = False
+#            self.flip_rate = 0.
+#            self.crop = False
             self.new_h = val_h
             self.new_w = val_w
 
@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
     for i, batch in enumerate(dataloader):
         print(i, batch['X'].size(), batch['Y'].size())
-    
+
         # observe 4th batch
         if i == 3:
             plt.figure()
