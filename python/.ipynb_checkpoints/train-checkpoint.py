@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from fcn import VGGNet, FCN32s, FCN16s, FCN8s, FCNs
 #from Cityscapes_loader import CityscapesDataset
 from CamVid_loader import CamVidDataset
+from CamVid_loader import parse_label
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -20,10 +21,10 @@ import sys
 import os
 
 
-n_class    = 20
+n_class    = 32
 
-batch_size = 6
-epochs     = 500
+batch_size = 4
+epochs     = 5
 lr         = 1e-4
 momentum   = 0
 w_decay    = 1e-5
@@ -36,8 +37,8 @@ if sys.argv[1] == 'CamVid':
     root_dir   = "CamVid/"
 else:
     root_dir   = "CityScapes/"
-train_file = os.path.join(root_dir, "train.csv")
-val_file   = os.path.join(root_dir, "val.csv")
+#train_file = os.path.join(root_dir, "train.csv")
+#val_file   = os.path.join(root_dir, "val.csv")
 
 # create dir for model
 model_dir = "models"
@@ -49,16 +50,18 @@ use_gpu = torch.cuda.is_available()
 num_gpu = list(range(torch.cuda.device_count()))
 
 if sys.argv[1] == 'CamVid':
-    train_data = CamVidDataset(csv_file=train_file, phase='train')
-else:
-    train_data = CityscapesDataset(csv_file=train_file, phase='train')
-train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=8)
+    #train_data = CamVidDataset(csv_file=train_file, phase='train')
+    train_data = CamVidDataset(parse_label("train"), phase='train')
+#else:
+#    train_data = CityscapesDataset(csv_file=train_file, phase='train')
+train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=4)
 
 if sys.argv[1] == 'CamVid':
-    val_data = CamVidDataset(csv_file=val_file, phase='val', flip_rate=0)
-else:
-    val_data = CityscapesDataset(csv_file=val_file, phase='val', flip_rate=0)
-val_loader = DataLoader(val_data, batch_size=1, num_workers=8)
+    #val_data = CamVidDataset(csv_file=val_file, phase='val', flip_rate=0)
+    val_data = CamVidDataset(parse_label("val"), phase='val', flip_rate=0)
+#else:
+#    val_data = CityscapesDataset(csv_file=val_file, phase='val', flip_rate=0)
+val_loader = DataLoader(val_data, batch_size=1, num_workers=4)
 
 vgg_model = VGGNet(requires_grad=True, remove_fc=True)
 fcn_model = FCNs(pretrained_net=vgg_model, n_class=n_class)
@@ -71,15 +74,19 @@ if use_gpu:
     print("Finish cuda loading, time elapsed {}".format(time.time() - ts))
 
 criterion = nn.BCEWithLogitsLoss()
+print("Here1")
 optimizer = optim.RMSprop(fcn_model.parameters(), lr=lr, momentum=momentum, weight_decay=w_decay)
+print("Here2")
 scheduler = lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)  # decay LR by a factor of 0.5 every 30 epochs
-
+print("Here3")
 # create dir for score
 score_dir = os.path.join("scores", configs)
 if not os.path.exists(score_dir):
     os.makedirs(score_dir)
 IU_scores    = np.zeros((epochs, n_class))
 pixel_scores = np.zeros(epochs)
+print("Here4")
+
 
 
 def train():
@@ -102,8 +109,10 @@ def train():
             optimizer.step()
 
             if iter % 10 == 0:
-                print("epoch{}, iter{}, loss: {}".format(epoch, iter, loss.data[0]))
-        
+                print("Epoch: %s" %epoch)
+                print("Loss: %s" %loss)
+                #print("epoch{}, iter{}, loss: {}".format(epoch, iter, loss.data[0]))
+
         print("Finish epoch {}, time elapsed {}".format(epoch, time.time() - ts))
         torch.save(fcn_model, model_path)
 
@@ -120,7 +129,6 @@ def val(epoch):
         else:
             inputs = Variable(batch['X'])
 
-        print(inputs.size())
         output = fcn_model(inputs)
         output = output.data.cpu().numpy()
 
